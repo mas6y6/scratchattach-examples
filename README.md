@@ -1,2 +1,2 @@
-# Scratchattach-Examples
+# Scratchattach Examples
 Examples for new scratchattach users
