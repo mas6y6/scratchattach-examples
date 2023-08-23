@@ -25,3 +25,5 @@ def get_profile(username):
     return returndata # Returns the list back to scratch
 
 client.run() #Starts the server
+
+#In the sb3 file please read the credits
