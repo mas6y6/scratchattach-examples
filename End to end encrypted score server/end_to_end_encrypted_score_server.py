@@ -10,6 +10,14 @@ conn = session.connect_cloud("PROJECT_ID") #here we go to the spesific project w
 
 client = scratch3.CloudRequests(conn)
 
+directory = os.getcwd()
+files = os.listdir(directory)
+
+for file in files:
+    if file.startswith("encryption"):
+        os.remove(file)
+        print(f"Deleted file {file}")
+
 @client.request
 def ping(): #this is a basic definition for when a ping request is sent
     print("Ping request received")
@@ -41,7 +49,7 @@ def get_elo(argument1): #elo is just your score, so if you want, you can change 
                     encryption.append(add_elo)
                     break
         addition.append(100) #code 100 means continue with operation
-        with open("encryption", "wb") as fp: #temporarily save encryption, so we can remove it on next pass
+        with open(f"encryption_{user}", "wb") as fp: #temporarily save encryption, so we can remove it on next pass
             pickle.dump(encryption, fp)
         return addition #and finally, send the encrypted score back
     else:
@@ -49,18 +57,20 @@ def get_elo(argument1): #elo is just your score, so if you want, you can change 
         return "no" #if the user has no score set, return back "no"
     
 @client.request
-def remove_encryption(argument1): #now that the scratch code has added it's own encryption, we can remove ours
-    with open("encryption", "rb") as fp: #open encryption numbers
+def remove_encryption(argument1, argument2): #now that the scratch code has added it's own encryption, we can remove ours
+    user = argument2
+    with open(f"encryption_{user}", "rb") as fp: #open encryption numbers
         encryption = pickle.load(fp)
     send_list = []
     math_finished = argument1.replace(" ", "") #fix spaces because it's a list
     for i in range(len(math_finished)): #remove encryption
         send_list.append(int(math_finished[i]) - encryption[i])
+    os.remove(f"encryption_{user}")
     send_list.append(200) #code 200 means finished with operation!
     return send_list #and finally, send everything back so the scratch code can decrypt the final answer
 
 @client.request
-def add_encryption(argument1): #this is all duplicated basically, the only difference is it's saving elo instead of getting it
+def add_encryption(argument1, argument2): #this is all duplicated basically, the only difference is it's saving elo instead of getting it
     send_list = []
     math_finished = argument1.replace(" ", "")
     encryption = []
@@ -72,7 +82,7 @@ def add_encryption(argument1): #this is all duplicated basically, the only diffe
                 encryption.append(add_elo)
                 break
     send_list.append(100)
-    with open("encryption", "wb") as fp:
+    with open(f"encryption_{user}", "wb") as fp:
         pickle.dump(encryption, fp)
     return send_list
 
@@ -81,18 +91,20 @@ def set_elo(argument1, argument2):
     user = argument1
     math_finished = argument2.replace(" ", "")
     data_list = []
-    with open("encryption", "rb") as fp:
+    with open(f"encryption_{user}", "rb") as fp:
         encryption = pickle.load(fp)
     for i in range(len(math_finished)):
         data_list.append(int(math_finished[i]) - encryption[i])
+    os.remove(f"encryption_{user}")
     save_list = ''.join(str(v) for v in data_list)
     if os.path.isfile("data_list"):
         with open("data_list", "rb") as fp:
             data_list = pickle.load(fp)
         if user in data_list:
             username_index = data_list.index(user)
-            temp_list = [s.replace(data_list[username_index + 1], save_list) for s in data_list]
-            data_list = temp_list
+            if not data_list[username_index + 1] == save_list:
+                temp_list = [s.replace(data_list[username_index + 1], save_list) for s in data_list]
+                data_list = temp_list
         else:
             data_list.append(user)
             data_list.append(save_list)
